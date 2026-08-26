@@ -143,30 +143,81 @@
     window.addEventListener("resize", function () { resize(); build(); });
   }
 
-  /* ---------- 5. Contact form ---------- */
-  var form = document.getElementById("contact-form");
-  var note = document.getElementById("form-note");
+ /* ---------- 5. Contact form ---------- */
 
-  if (form) {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var name = form.name.value.trim();
-      var email = form.email.value.trim();
-      var message = form.message.value.trim();
-      var validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+var form = document.getElementById("contact-form");
+var note = document.getElementById("form-note");
 
-      if (!name || !validEmail || !message) {
-        note.textContent = "Please fill in your name, a valid email and a message.";
-        note.classList.add("error");
-        return;
+if (form) {
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    var name = form.name.value.trim();
+    var email = form.email.value.trim();
+    var company = form.company.value.trim();
+    var phone = form.phone.value.trim();
+    var project = form.project.value;
+    var team = form.team.value;
+    var budget = form.budget.value;
+    var timeline = form.timeline.value;
+    var message = form.message.value.trim();
+
+    var validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!name || !validEmail || !project || !message) {
+      note.textContent =
+        "Please fill in your name, a valid email, project type and message.";
+      note.classList.add("error");
+      return;
+    }
+
+    note.classList.remove("error");
+    note.textContent = "Sending your project request...";
+
+    var leadData = {
+      name: name,
+      email: email,
+      company: company,
+      phone: phone,
+      project: project,
+      team: team,
+      budget: budget,
+      timeline: timeline,
+      message: message,
+      submittedAt: new Date().toISOString()
+    };
+
+    try {
+      var response = await fetch(
+        "https://daniakhan.app.n8n.cloud/webhook/portfolio",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(leadData)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Webhook request failed");
       }
 
-      note.classList.remove("error");
-      note.textContent = "Thanks " + name + "! Your message is ready to send — connect this form to your email service.";
-      form.reset();
-    });
-  }
+      note.textContent =
+        "Thank you " + name + "! Your project request has been sent successfully.";
 
+      form.reset();
+
+    } catch (error) {
+      console.error(error);
+
+      note.textContent =
+        "Something went wrong. Please try again or contact me by email.";
+
+      note.classList.add("error");
+    }
+  });
+}
   /* ---------- 6. Footer year ---------- */
   var year = document.getElementById("year");
   if (year) year.textContent = new Date().getFullYear();
